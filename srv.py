@@ -1,7 +1,11 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
 import threading
+import os
 import tkinter as tk
 from myText import myText
+from selenium import webdriver
+
 
 # https://github.com/eduvpn/python-eduvpn-client/blob/master/eduvpn/oauth2.py
 class ServerThread (threading.Thread):
@@ -12,18 +16,21 @@ class ServerThread (threading.Thread):
             self.end_headers()
 
         routes = {
-            '/openurl'
-        }    
+            'openurl':'/openurl',
+        } 
+        mylogger = None
+
         def do_openurlfrm(self):
             frm ="""
-<form method='POST' action='/openurl'>
-URL TO Open : <input type='text' name='url'>
-<input type='submit'>
-</form>
+                <form method='POST' action='/openurl'>
+                URL TO Open : <input type='text' name='url'>
+                <input type='submit'>
+                </form>
             """
             return frm
 
         def do_GET(self):
+
 
             print ("PAth : ", str(self.path))
             print ("headers : ", str(self.headers))
@@ -35,16 +42,35 @@ URL TO Open : <input type='text' name='url'>
             self.wfile.write(self.do_openurlfrm().encode('utf-8'))
 
         def write(self,data):
-            self.wfile.write(data.encode('utf-8'));
+            self.wfile.write(data.encode('utf-8'))
+           
         def do_POST(self):
-            content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
-            post_data = self.rfile.read(content_length) # <--- Gets the data itself
-            self.mylogger.add_text(post_data)
+            print ("Post Path : ", str(self.path))
+            print ("Post headers : ", str(self.headers))
+            content_length = int(self.headers['Content-Length']) 
+            post_data = self.rfile.read(content_length) 
+            fields = parse_qs(str(post_data))
+            print("fields \n : " , str(fields))
+
+            if self.path == self.routes['openurl']:
+                #hard coded for testing
+                #TODO :
+                #Options tab with default browser
+                #and option to dowload geckodriver for selected browser
+                geckodir = os.path.normpath(os.path.join(os.path.dirname(__file__), r'drivers\firefox-x64'))
+                geckofile = os.path.normpath(os.path.join(geckodir, 'geckodriver.exe'))
+                self.mylogger.add_text("gecko : \n" + geckofile)
+                binary = r"C:\Program files\Mozilla Firefox\firefox.exe"
+                driver = webdriver.Firefox(firefox_binary=binary, executable_path=geckofile)
+                driver.get(fields['url'])
+
+            self.mylogger.add_text(post_data.decode('utf-8'))
+            self.mylogger.add_text("Headers:" + str(self.headers))
             '''logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
                 str(self.path), str(self.headers), post_data.decode('utf-8'))
 '''
             self.response()
-            self.write(str(post_data))
+            self.write(str(post_data.decode('utf-8')))
         
     def __init__(self,port,mylogger):
       threading.Thread.__init__(self)
@@ -65,6 +91,7 @@ URL TO Open : <input type='text' name='url'>
     
     def start_server(self):
         self.mylogger.add_bolded('Starting Server...')
+        self.RequestHandler.mylogger = self.mylogger
         self.httpd = HTTPServer(('', self.port), self.RequestHandler)
         self.stopServer = False
 
