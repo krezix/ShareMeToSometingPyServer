@@ -49,7 +49,7 @@ class ServerThread (threading.Thread):
             print ("Post headers : ", str(self.headers))
             content_length = int(self.headers['Content-Length']) 
             post_data = self.rfile.read(content_length) 
-            fields = parse_qs(str(post_data))
+            fields = parse_qs(str(post_data.decode('utf-8')))
             print("fields \n : " , str(fields))
 
             if self.path == self.routes['openurl']:
@@ -57,12 +57,14 @@ class ServerThread (threading.Thread):
                 #TODO :
                 #Options tab with default browser
                 #and option to dowload geckodriver for selected browser
+                #must use try catch 
                 geckodir = os.path.normpath(os.path.join(os.path.dirname(__file__), r'drivers\firefox-x64'))
                 geckofile = os.path.normpath(os.path.join(geckodir, 'geckodriver.exe'))
                 self.mylogger.add_text("gecko : \n" + geckofile)
+                self.mylogger.add_bolded('url : \n ' + fields['url'][0])
                 binary = r"C:\Program files\Mozilla Firefox\firefox.exe"
                 driver = webdriver.Firefox(firefox_binary=binary, executable_path=geckofile)
-                driver.get(fields['url'])
+                driver.get(fields['url'][0])
 
             self.mylogger.add_text(post_data.decode('utf-8'))
             self.mylogger.add_text("Headers:" + str(self.headers))
