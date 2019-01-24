@@ -8,17 +8,18 @@ class frmOptions(tk.Frame):
         self.parent = parent
         self.frmDefaultBrowser = tk.Frame(self)
         
+        self.browsers = ["Mozilla Firefox", 
+                         "Google Chrome",
+                         "Internet Explorer",
+                         "Safari",
+                         "Opera"]
+                                    
         self.lblDefaultBrowser = tk.Label(self.frmDefaultBrowser,text="Default Browser :")
         self.lblDefaultBrowser.pack(side="left")
         #self.txtDefaultBrowser = tk.Entry(self)
         #self.txtDefaultBrowser.pack(side="left", fill=tk.X,expand=True)
         self.cbDefaultBrowser = tk.ttk.Combobox(self.frmDefaultBrowser, state="readonly",
-                                    values=[
-                                    "Mozilla Firefox", 
-                                    "Google Chrome",
-                                    "Internet Explorer",
-                                    "Safari",
-                                    "Opera"])
+                                    values=self.browsers)
         self.cbDefaultBrowser.current(0)
         self.cbDefaultBrowser.bind("<<ComboboxSelected>>", self.OncbDefaulBrowserSelected) # for multiple combos use lambda event:self.OncbDefaulBrowserSelected(event, "Hello"))
         self.cbDefaultBrowser.pack(side="left", fill=tk.X, expand=True)
